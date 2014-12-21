@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>index</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+
+		<link rel="stylesheet" href="css/mui.min.css">
+		<script src="js/mui.min.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<style>
+			html,body {
+				background-color: #efeff4;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		  <a class="mui-btn mui-btn-link mui-btn-nav mui-pull-left">　微Q</a>
+		  <a class="mui-action-back mui-icon mui-icon-bars mui-pull-right"></a>
+		  <h1 id="title" class="mui-title">微Q</h1> 
+		</header>
+		<nav class="mui-bar mui-bar-tab">
+			<a id="defaultTab" class="chat mui-tab-item mui-active" href="tab-webview-subpage-chat.html">
+				<span class="mui-icon mui-icon-email"></span>
+				<span class="mui-tab-label">微Q</span>
+			</a>
+			<a class="contact mui-tab-item" href="tab-webview-subpage-contact.html">
+				<span class="mui-icon mui-icon-contact"></span>
+				<span class="mui-tab-label">通讯录</span>
+			</a>
+			<a  class="about mui-tab-item " href="tab-webview-subpage-about.html">
+				<span class="mui-icon mui-icon-paperplane"></span>
+				<span class="mui-tab-label">发现</span>
+			</a>
+			<a class="setting mui-tab-item" href="tab-webview-subpage-setting.html">
+				<span class="mui-icon mui-icon-gear"></span>
+				<span class="mui-tab-label">设置</span>
+			</a>
+		</nav>
+		<script type="text/javascript" charset="utf-8">
+			var subpages = ['tab-webview-subpage-chat.html','tab-webview-subpage-contact.html','tab-webview-subpage-about.html','tab-webview-subpage-setting.html'];
+			var subpage_style = {
+				top: '46px',
+				bottom: '50px'
+			};
+			var islogged = 0;
+			//创建子页面，首个选项卡页面显示，其它均隐藏；
+			mui.plusReady(function(){
+				var self = plus.webview.currentWebview();
+				for(var i=0;i<4;i++){
+					var sub = plus.webview.create(subpages[i],subpages[i],subpage_style);
+					if(i>0){
+						sub.hide();
+					}
+					self.append(sub);
+				}
+				self.show();
+				mui.preload({
+				    url: 'dialog.html', 
+				    id:'dialog'
+			    });
+			    if(!islogged) {
+			    	mui.openWindow('login.html', 'login', {
+			    		show:{
+			    			aniShow:'zoom-fade-out'
+			    		}
+			    	})
+			    }
+			}); 
+			
+			//当前激活选项
+			var activeTab = subpages[0];
+			var title = document.getElementById("title");
+			//选项卡点击事件
+			mui('.mui-bar-tab').on('tap', 'a', function(e) {
+				var targetTab = this.getAttribute('href');
+				if (targetTab == activeTab) {
+					return;
+				}
+				//更换标题
+				title.innerHTML = this.querySelector('.mui-tab-label').innerHTML;
+				//显示目标选项卡
+				plus.webview.show(targetTab);
+				//隐藏当前;
+				plus.webview.hide(activeTab);
+				//更改当前活跃的选项卡
+				activeTab = targetTab;
+			});
+			window.addEventListener('updateDot', function(data) {
+				data = data.detail;
+				if(data.type = 'chat') {
+					var chat = $('.chat').find('.mui-badge');
+					var num = 0;
+					if(chat.length > 0) {
+						num = parseInt(chat.text()) + data.count;
+					}else {
+						$('.chat .mui-icon').append('<span class="mui-badge"></span>');
+						chat = $('.chat').find('.mui-badge');
+						num = data.count; 
+					}
+					if(num === 0){
+						$('.chat .mui-badge').remove();
+					}else {
+						chat.text(num);
+					}
+				}
+			});
+			var viewStorage = function() {
+				for(var i = 0; i < plus.storage.getLength(); i++)
+				{
+					console.log(plus.getItems(plus.storage.key(i)));
+				}
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>login</title>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <script src="js/mui.min.js"></script>
+	<script src="js/jquery.min.js"></script>
+    <script src="js/qqapi.js"></script>
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>
+    <style type="text/css">
+    	.container {
+    		margin-top: 100px;
+    	}
+    	
+    	.avatar{
+    		display: block;
+			margin: auto;
+    	}
+    	form {
+			margin: 20px;
+    	}
+    	#input {
+    		border-radius: 3px; 
+			border: solid 1px #c8c7cc;
+    	}
+    	.mui-input-group .mui-input-row:after {
+    		right: 15px;
+    	}
+    	button {
+    		margin-top: 20px;
+    	}
+    </style>
+</head>
+<body>
+	<div class="container">
+		<img class="avatar" src="images/qqavatar.png">
+		<form  class="mui-input-group">
+			<div id="input">
+				<div class="mui-input-row">
+					<input value="823594715" id="qq" type="text" class="mui-input-clear" placeholder="QQ号码/手机/邮箱">
+				</div>
+				<div class="mui-input-row">
+					<input value="QWEASD4567" id="pw" type="password" class="mui-input-clear" placeholder="密码">
+				</div>
+			</div>
+			<button id="login" class="mui-btn mui-btn-primary mui-btn-block">登录</button>
+		</form>
+
+	</div>
+	<script type="text/javascript">
+		function showToast(text){
+			if('Android'!=plus.os.name){
+				plus.nativeUI.alert(text);
+			}else{
+				plus.nativeUI.toast(text);
+			}
+		}
+		mui.back = function(){
+		  var btn = ["确定","取消"];
+		  mui.confirm('确认退出微Q？','退出',btn,function(e){
+		    if(e.index==0){
+		     plus.runtime.quit();
+		    }
+		  });
+		}
+		var waiting = function() {
+			$('.mask').show();
+			var waiting = plus.nativeUI.showWaiting( "加载中..." );
+			return {
+				close: function() {
+					waiting.close();
+					$('.mask').hide();
+					}
+				}
+		}
+		document.getElementById('login').addEventListener('click', function() {
+			event.preventDefault();
+			var qq = document.getElementById('qq').value; 
+			var pw = document.getElementById('pw').value;
+			var wait = waiting();
+			qqapi.query('login', qq, pw).success(function(data) {
+				if(data.success) {
+					var contactPage = plus.webview.getWebviewById('tab-webview-subpage-contact.html');
+					var chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html');
+					mui.fire(contactPage, 'refreshFrient', {data:data});
+					mui.fire(chatPage, 'startGetMessage', {data:data});
+					plus.storage.setItem('USER', qq);
+					showToast('登陆成功');
+					mui.currentWebview.hide();
+				}else {
+					showToast('密码错误');
+				}
+				wait.close();
+			}).error(function(data) {
+				showToast('网络连接错误');
+				wait.close();
+			})
+		})
+	</script>
+</body>
+</html>

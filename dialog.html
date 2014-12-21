@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">		
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<link rel="stylesheet" href="css/mui.min.css">
+		<script src="js/mui.min.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/qqapi.js"></script>
+		<title>dialog</title>
+		<style type="text/css">
+			.container {
+				background-color: #EBEBEB;
+				position: fixed;
+				top: 45px;
+				bottom: 50px;
+				width: 100%;
+				overflow-y: scroll;
+			}
+			.container p {
+				margin-top: 0;
+				margin-bottom: 0;
+				font-size: 17px;
+				color: black;
+				word-break: break-all;
+			}
+			.mui-active {
+				margin: 45px 0 60px 0;
+			}
+			.text {
+				position: relative;
+				padding: 10px;
+				margin: 0 10px;
+				border-radius: 8px;
+				max-width: 200px;
+			}
+			.left-message .text {
+				background-color: white;
+			}
+			.right-message .text {
+				background-color: #B1E866;
+			}
+			.left-arrow svg{
+				background-color: inherit;
+				position: absolute;
+				left: -5px;
+				top: 15px;
+				width: 5px;
+				height: 10px
+			}
+			.right-arrow svg{
+				background-color: inherit;
+				position: absolute;
+				right: -5px;
+				top: 15px;
+				width: 5px;
+				height: 10px
+			}
+			.message {
+				overflow: auto;
+				margin: 15px 10px;
+			}
+			.input-bar {
+				position: fixed;
+				width: 100%;
+				height: 42px;
+				bottom: 0px;
+			}
+			.mui-input-row {
+				padding-right: 60px;
+				margin-left: 5px;
+			}
+			.mui-input-row input {
+				height: 34px;
+				-webkit-box-sizing: border-box;
+				box-sizing: border-box;
+				font-size: 16px;
+				text-align: center;
+				background-color: rgba(0,0,0,.1);
+				border: 0;
+				border-radius: 6px;
+				width: 100%;
+			}
+			.mui-input-row button {
+				width: 50px;	
+				position: absolute;
+				right: 5px;
+				top: 0;
+				padding: 6px 10px;
+				vertical-align: middle;
+			}
+			.message img {
+				width: 42px;
+				height: 42px;
+			}
+			.mask {
+				position: fixed;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				opacity: .7;
+				z-index: 999;
+				background-color: black;
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="mask">
+			<span class="mui-icon mui-icon-spinner-cycle mui-spin"></span>
+		</div>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 id="t" class="mui-title">对话</h1>
+		</header>
+		<div class="container">
+			<div class="mui-scroll">
+<!--				<div class="left-message message">
+					<img class="mui-pull-left" src="images/42x42.jpg"/>
+					<div class="mui-pull-left text">
+					<span class="left-arrow">
+					<svg  xmlns="http://www.w3.org/2000/svg"  version="1.1">
+					<polygon points="5,0 5,10 0,5" style="fill:#FFFFFF; stroke:#000000;stroke-width:0"/>
+					</svg>
+					</span><p>1233333333333333333333333333333333333333333333333</p></div>
+				</div>
+				<div class="right-message message">
+					<img class="mui-pull-right" src="images/42x42.jpg"/>
+					<div class="mui-pull-right text">
+					<span class="right-arrow"> 
+					<svg  xmlns="http://www.w3.org/2000/svg"  version="1.1">
+					<polygon points="5,5 0,10 0,0" style="fill:#B1E866; stroke:#000000;stroke-width:0"/>
+					</svg>
+					</span><p>你说帮你交就帮你叫？手续费20块20块20块20块20块20块20块20块20块20块20块20块20块20块20块20块</p></div>
+				</div>-->
+			</div>
+		</div>
+		<nav class="input-bar">
+			<div class="mui-input-row">
+				<input  placeholder="输入消息...">
+				<button id="send" class="mui-btn mui-btn-positive">发送</button>
+			</div>
+		</nav>
+
+		<script type="text/javascript">
+			mui.init({
+				swipeBack:true
+			});
+			var generateList = function(qq, content, position) {
+				position = position || 'left';
+				if(position !== 'right'){
+					return 	'<div class="left-message message">'
+						+ '<img class="mui-pull-left" src="' + qqapi.imghost + qq + '"/>'
+						+ '<div class="mui-pull-left text">'
+						+ '<span class="left-arrow">'
+						+ '<svg  xmlns="http://www.w3.org/2000/svg"  version="1.1">'
+						+ '<polygon points="5,0 5,10 0,5" style="fill:#FFFFFF; stroke:#000000;stroke-width:0"/>'
+						+ '</svg>'
+						+ '</span><p>' + content + '</p></div>'
+					+ '</div>'
+				}
+				return 	'<div class="right-message message">'
+						+ '<img class="mui-pull-right" src="' + qqapi.imghost + qq + '"/>'
+						+ '<div class="mui-pull-right text">'
+						+ '<span class="right-arrow">'
+						+ '<svg  xmlns="http://www.w3.org/2000/svg"  version="1.1">'
+						+ '<polygon points="5,5 0,10 0,0" style="fill:#B1E866; stroke:#000000;stroke-width:0"/>'
+						+ '</svg>'
+						+ '</span><p>' + content + '</p></div>'
+					+ '</div>'
+			}
+			var GenerateMessage = function(qq, position) { 
+				position = position || 'left';
+				var container = $('.container'), scroll = $('.mui-scroll');
+				return function(content) {
+					var list = generateList(qq, content, position);
+					$('.mui-scroll').append(list);
+					container.scrollTop(scroll.height());
+				}
+			}
+			var receiveMessage;
+			var waiting = function() {
+				$('.mask').show();
+				var waiting = plus.nativeUI.showWaiting( "加载中..." );
+				return {
+					close: function() {
+						waiting.close();
+						$('.mask').hide();
+						}
+					}
+			}
+			var dialogQQ;
+			window.addEventListener('initDialog', function(data) {
+				//var wait = waiting();
+				data = data.detail;
+				dialogQQ = data.qq;
+				window.message = plus.storage.getItem(data.qq); 
+				message = JSON.parse(message);
+				//console.log(data)
+				//console.log(message);
+				$('#t').text(data.title);
+				$('.mui-scroll').html('');
+				receiveMessage = new GenerateMessage(data.qq);
+				for(var i in message.content) {
+					receiveMessage(message.content[i]);
+				}
+				//wait.close();
+			});
+			window.addEventListener('updateMessage', function(data) {
+				console.log(data);
+				data = data.detail;
+				console.log(data);
+				if(data.qq === dialogQQ) {
+					receiveMessage(data.content);
+				}
+			});
+			function showToast(text){
+				if('Android'!=plus.os.name){
+					plus.nativeUI.alert(text);
+				}else{
+					plus.nativeUI.toast(text);
+				}
+			}
+			mui.plusReady(function() {
+				var hostQQ = plus.storage.getItem('USER');
+				var sendMessage = new GenerateMessage(hostQQ, 'right');
+				$('#send').bind('tap', function() {
+					//event.preventDefault();
+					var ipt = $(this).parent().find('input');
+					var msg = ipt.val();
+					qqapi.query('send_message', dialogQQ , msg).success(function(data) {
+						if(data.success) {
+							ipt.val('');
+							sendMessage(msg);
+						}else {
+							showToast('发送失败');
+						}
+					}).error(function(data) {
+							showToast('网络错误！');
+					})
+				})
+			})
+			
+			mui.back = function() {
+				$('.mui-scroll').html('');
+				//console.log('clear');
+				plus.webview.hide( plus.webview.currentWebview(), 'slide-out-right' );
+			}
+		</script>
+	</body>
+</html>

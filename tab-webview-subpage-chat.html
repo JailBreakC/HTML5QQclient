@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>chat</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="css/mui.min.css">
+		<script src="js/mui.min.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/qqapi.js"></script>
+		<style>
+		html,body {
+			background-color: #efeff4;
+		}
+		.title{
+			margin: 20px 15px 10px;
+			color: #6d6d72;
+			font-size: 15px;
+		}
+		 .oa-contact-cell.mui-table .mui-table-cell {
+			padding: 5px 0;
+			vertical-align: middle;
+		}
+		
+		.oa-contact-cell {
+			position: relative;
+			margin: -11px 0;
+		}
+		.oa-contact-avatar {
+			width: 75px;
+		}
+		.oa-contact-avatar img {
+			border-radius: 50%;
+		}
+		.oa-contact-content {
+			width: 100%;
+		}
+		.oa-contact-name {
+			margin-right: 20px;
+		}
+		.oa-contact-name, oa-contact-position {
+			float: left;
+		}
+		.oa-contact-email {
+			font-size: 15px;
+		}
+		li img {
+			width: 60px;
+			height: 60px;
+			vertical-align: bottom;
+		}
+		.mui-badge {
+			position: absolute;
+			top: 40px;
+			right: 7px;
+			background: red;
+			color: white;
+		}
+		</style>
+		<script type="text/javascript" charset="utf-8">
+			mui.init();
+		</script>
+	</head>
+
+	<body>
+		<div class="mui-content">
+			
+			<div id="pullrefresh" class="mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed">
+<!--						<li class="mui-table-view-cell">
+							 <div class="mui-slider-cell">
+								 <div class="oa-contact-cell mui-table">
+									 <div class="oa-contact-avatar mui-table-cell">
+										 <img src="images/42x42.jpg" /> 
+									 </div>
+									 <div class="oa-contact-content mui-table-cell">
+										 <div class="mui-clearfix">
+											 <h4 class="oa-contact-name" > asdfadsf </h4>
+										 </div>
+										 <span class="mui-badge">9</span>
+										 <p name=" + data[i].from + " class="oa-contact-email mui-h6">
+										 	adsfadfasdf
+										 </p>
+									 </div>
+								 </div>
+							 </div>
+						 </li>-->
+					</ul>
+				</div>
+			</div>
+			<script>
+			"use strict";
+				mui.init({
+					swipeBack: false,
+					pullRefresh: {
+						container: '#pullrefresh',
+						down: {
+							callback: pulldownRefresh
+						},
+						up: {
+							contentrefresh: '正在加载...',
+							callback: pullupRefresh
+						}
+					}
+				});
+				
+				function showToast(text){
+					if('Android'!=plus.os.name){
+						plus.nativeUI.alert(text);
+					}else{
+						plus.nativeUI.toast(text);
+					}
+				}
+				/**
+				 * 下拉刷新具体业务实现
+				 */
+				function pulldownRefresh() {
+					setTimeout(function() {
+						showToast('没有新的消息'); 
+						mui('#pullrefresh').pullRefresh().endPulldownToRefresh(); //refresh completed
+					}, 1000);
+				}
+				var count = 0;
+				/**
+				 * 上拉加载具体业务实现
+				 */
+				function pullupRefresh() {
+					setTimeout(function() {
+						mui('#pullrefresh').pullRefresh().endPullupToRefresh(0); //参数为true代表没有更多数据了。
+						showToast('没数据了萨比');
+					}, 1000);
+				}
+				var insertDialogMessage = function(qq, data) {
+					var oldMessage = plus.storage.getItem(qq);
+					oldMessage = JSON.parse(oldMessage);
+					if(oldMessage) {
+						oldMessage.content.push(data);
+					}else { 
+						oldMessage = {}
+						oldMessage.content = [];
+						//console.log(data);
+						oldMessage.content.push(data);
+					}
+					oldMessage = JSON.stringify(oldMessage);
+					plus.storage.setItem(qq, oldMessage);
+				}
+				var insertHostMessage = function() {
+					var hostQQ = plus.storage.getItem('USER');
+					var insert = function(qq, content) {
+						var oldMessage = plus.storage.getItem('host' + hostQQ);
+						var data = {};
+						oldMessage = JSON.parse(oldMessage);
+						data.qq = qq;
+						data.content = content;
+						if($.isArray(oldMessage) && oldMessage.length > 0) {
+							oldMessage.push(data);
+						}else { 
+							oldMessage = [];
+							oldMessage.push(data);
+						}
+						//console.log(data);
+						oldMessage = JSON.stringify(oldMessage);
+						plus.storage.setItem('host' + hostQQ, oldMessage);
+					}
+					plus.storage.removeItem('host' + hostQQ);
+					$('li').each(function(i, ele) {
+						var qq = $(ele).attr('id');
+						var content = $(ele).find('p').text();
+						insert(qq, content);
+					})
+				}
+				var generateList = function(qq, content) { 
+					return  '<li id="' + qq + '" class="mui-table-view-cell">'
+						+ '<div class="mui-slider-cell">'
+							+ '<div class="oa-contact-cell mui-table">'
+								+ '<div class="oa-contact-avatar mui-table-cell">'
+									+ '<img src="' + qqapi.imghost + qq + '" /> '
+								+ '</div>'
+								+ '<div class="oa-contact-content mui-table-cell">'
+									+ '<div class="mui-clearfix">'
+										+ '<h4 class="oa-contact-name" >' + qq + '</h4>'
+									+ '</div>'
+									+ '<p class="oa-contact-email mui-h6">'
+										+ content
+									+ '</p>'
+								+ '</div>'
+							+ '</div>'
+						+ '</div>'
+					+ '</li>';
+				}
+				var parseHostMessage = function() {
+					var host = plus.storage.getItem('USER');
+					var message = plus.storage.getItem('host'+ host);
+					message = JSON.parse(message);
+					for(var i in message) {
+						var list = generateList(message[i].qq, message[i].content);
+						//保存已存在的会话状态
+						exsitDialog.push(message[i].qq);
+						$('ul').append(list);
+					}
+				}
+				var updateDot = function(qq, clear) {
+					var mainPage = plus.webview.getWebviewById('HBuilder');
+					var dot = $('ul').find('#'+ qq +' .mui-badge');
+					if(!clear){
+						if(dot.length > 0) {
+							var num = parseInt(dot.text(), 10) + 1;
+							dot.text(num);
+						} else {
+							$('ul').find('#'+ qq + ' .oa-contact-content').append('<span class="mui-badge">1</span>')
+						}
+						mui.fire(mainPage, 'updateDot', {type: 'chat', count: 1});
+					}else {
+						if(dot.length > 0) {
+							var count = parseInt(dot.text(), 10);
+							dot.remove();
+							mui.fire(mainPage, 'updateDot', {type: 'chat', count: -count});
+						}
+					}
+				}
+				
+				var exsitDialog = [];
+				var dialogPage;
+				var dialogQQ = false;
+				var getMessage = function() {
+					qqapi.query('get_message').success(function(data) {
+						data = data.data;
+						//console.log(data);
+						for(var i in data){ 
+							//console.log(exsitDialog);
+							var content; 
+							if( data[i].data.length > 15)
+									content = data[i].data.slice(0, 15) + '...';
+								else
+									content = data[i].data;
+							if($.inArray(data[i].from, exsitDialog) === -1){
+								var list = generateList(data[i].from, content);
+								$('ul').prepend(list);
+								exsitDialog.push(data[i].from);
+							}else {
+								$('ul').find('#'+data[i].from+' p').text(content).parents('li').prependTo('ul');
+							}
+							//console.log('content' + data[i].data);
+							insertDialogMessage(data[i].from, data[i].data);
+							insertHostMessage();
+							mui.fire(dialogPage, 'updateMessage', {qq:data[i].from, content:data[i].data});
+							console.log(dialogQQ);
+							if(dialogQQ !== data[i].from){
+								if( dialogPage.isVisible() !== true)
+									dialogQQ = false;
+								updateDot(data[i].from);
+							}
+						}
+					})
+				}
+				mui.plusReady(function() {
+					var subWebview = null;
+					$('ul').on('tap', 'li', function() {
+						dialogPage = plus.webview.getWebviewById("dialog");
+						var title = $(this).find('.oa-contact-name').text();
+						var qq = $(this).attr('id');
+						updateDot(qq, true);
+						dialogQQ = qq;
+						dialogPage.show('slide-in-right', 200, function() {
+							mui.fire(dialogPage,'initDialog',{title:title, qq:qq});
+						});
+					});
+					window.addEventListener('startGetMessage', function() {
+						setInterval(getMessage,1000);
+					})
+					parseHostMessage();
+				})
+				//TODO ,头像角标，底栏角标， 聊天界面， 登录webview
+			</script>
+		</div>
+
+	</body>
+
+</html>
