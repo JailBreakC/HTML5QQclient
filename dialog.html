@@ -105,14 +105,18 @@
 				background-color: black;
 				display: none;
 			}
-			input:after {
-			position: absolute;
-			top: 0;
-			right: 0;
-			left: 0;
-			height: 20px;
-			content: '';
-			background-color: #c8c7cc;	
+			#send {
+				position: absolute;
+				height: 34px;
+				width: 50px;
+				bottom: 0px;
+				right: 5px;
+				background: green;
+				padding: 0px;
+				opacity: 1;
+			}
+			#send::-webkit-input-placeholder {
+				color: white;
 			}
 		</style>
 	</head>
@@ -148,8 +152,8 @@
 		</div>
 		<nav class="input-bar">
 			<div class="mui-input-row">
-				<input  placeholder="输入消息...">
-				<button id="send" class="mui-btn mui-btn-positive">发送</button>
+				<input class="input" placeholder="输入消息...">
+				<input id="send" placeholder="发送" class="mui-btn mui-btn-positive">
 			</div>
 		</nav>
 
@@ -247,19 +251,27 @@
 					//event.preventDefault();
 					var ipt = $(this).parent().find('input');
 					var msg = ipt.val();
-					qqapi.query('send_message', dialogQQ , msg).success(function(data) {
-						if(data.success) {
-							ipt.val('');
-							sendMessage(msg);
-							mui.fire(chatPage, 'msgSended', {qq: dialogQQ, content: msg, type: 'right'});
-						}else {
-							showToast('发送失败');
-						}
-					}).error(function(data) {
-							showToast('网络错误！');
-					})
-					return false;
+					ipt.focus();
+					if(msg){
+						qqapi.query('send_message', dialogQQ , msg).success(function(data) {
+							if(data.success) { 
+								ipt.val('');
+								sendMessage(msg);
+								mui.fire(chatPage, 'msgSended', {qq: dialogQQ, content: msg, type: 'right'});
+							}else {
+								showToast('发送失败');
+							}
+						}).error(function(data) {
+								showToast('网络错误！');
+						})
+					}else {
+						showToast('请输入消息');
+					}
 				})
+				$('#send').focus(function() {
+					$('.input').focus();
+				})
+				
 			})
 			
 			mui.back = function() {
