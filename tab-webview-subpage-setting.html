@@ -27,10 +27,6 @@
 	</head>
 
 	<body>
-		<!--<header class="mui-bar mui-bar-nav">
-			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
-			<h1 class="mui-title">设置</h1>
-		</header>-->
 		<div class="mui-content">
 			<div class="title">
 				这是webview模式选项卡中的第4个子页面，该页面展示一个常见的设置示例
@@ -69,6 +65,8 @@
 		</div>
 		<script>
 		document.getElementById('exist').addEventListener('tap', function () {
+			var chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html')
+			chatPage.loadURL('tab-webview-subpage-chat.html')
 			var login = plus.webview.getWebviewById("login");
 			login.show();
 		})

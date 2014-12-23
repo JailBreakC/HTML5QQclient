@@ -65,19 +65,25 @@
 		<script>
 			var subWebview = null,template = null;
 			$('ul').on('tap', 'li',  function() {
-				console.log('sss');
+				//console.log('sss');
 				template = plus.webview.getWebviewById("dialog");
 				var title = $(this).find('h4').text();
 				var qq = $(this).attr('id');
-				console.log(qq);
+				/*console.log(qq);*/
 				mui.fire(template,'initDialog',{title:title,qq:qq});
 				template.show('slide-in-right', 200);
 			});
 			window.addEventListener('refreshFrient', function(data) {
 				data = data.detail.data.friends;
-				alert(plus.storage.getItem('USER'))
+				//debugger;
+				var hostQQ = plus.storage.getItem('USER');
+				var nick = plus.storage.getItem(hostQQ + 'nick');
+				nick = JSON.parse(nick);
+				//console.log(nick);
 				$('ul').html('');
+
 				for(i in data) {
+					//console.log(data[i].nick);
 					var list =  '<li id="'+data[i].qq+'" class="mui-table-view-cell">'
 									+ '<div class="mui-slider-cell">'
 										+ '<div class="oa-contact-cell mui-table">'
@@ -86,7 +92,7 @@
 											+ '</div>'
 											+ '<div class="oa-contact-content mui-table-cell">'
 												+ '<div class="mui-clearfix">'
-													+ '<h4 class="oa-contact-name">' + data[i].qq + '</h4>'
+													+ '<h4 class="oa-contact-name">' + nick[data[i].qq] + '</h4>'
 												+ '</div> '
 											+ '</div>'
 										+ '</div>'

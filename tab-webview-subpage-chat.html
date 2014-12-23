@@ -61,7 +61,11 @@
 		}
 		</style>
 		<script type="text/javascript" charset="utf-8">
-			mui.init();
+			mui.init({
+				gestureConfig:{
+					longtap: true
+				}
+			});
 		</script>
 	</head>
 
@@ -130,32 +134,45 @@
 				 */
 				function pullupRefresh() {
 					setTimeout(function() {
-						mui('#pullrefresh').pullRefresh().endPullupToRefresh(0); //参数为true代表没有更多数据了。
-						showToast('没数据了萨比');
+						mui('#pullrefresh').pullRefresh().endPullupToRefresh(1); //参数为true代表没有更多数据了。
+						showToast('没数据了');
 					}, 1000);
 				}
-				var insertDialogMessage = function(qq, data) {
-					var oldMessage = plus.storage.getItem(qq);
+				//储存对话列表简略消息
+				var dialogStorage = {
+						set: function(qq, content) { return plus.storage.setItem(hostQQ + qq, content);},
+						get: function(qq) {return plus.storage.getItem(hostQQ + qq);}
+				}
+				//[qq]:对话目标QQ,[data]:对话内容,[type]:消息类型'left'接收到的消息，'right' 发送出去的消息
+				var insertDialogStorage = function(qq, data, type) {
+					var oldMessage = dialogStorage.get(qq);
+					type = type || 'left';
 					oldMessage = JSON.parse(oldMessage);
 					if(oldMessage) {
 						oldMessage.content.push(data);
+						oldMessage.type.push(type);
 					}else { 
-						oldMessage = {}
+						oldMessage = {};
 						oldMessage.content = [];
-						//console.log(data);
+						oldMessage.type = [];
 						oldMessage.content.push(data);
+						oldMessage.type.push(type);
+						//console.log(data);
 					}
 					oldMessage = JSON.stringify(oldMessage);
-					plus.storage.setItem(qq, oldMessage);
+					dialogStorage.set(qq, oldMessage);
+					updateHostMessage();
 				}
-				var insertHostMessage = function() {
-					var hostQQ = plus.storage.getItem('USER');
-					var insert = function(qq, content) {
+				var updateHostMessage = function() {
+					//[qq]:对话目标QQ,[data]:对话内容, [type]:消息类型'left'接收到的消息, 'right' 发送出去的消息
+					var insert = function(qq, content, type) {
 						var oldMessage = plus.storage.getItem('host' + hostQQ);
 						var data = {};
+						type = type || 'left';
 						oldMessage = JSON.parse(oldMessage);
 						data.qq = qq;
 						data.content = content;
+						data.type = type;
 						if($.isArray(oldMessage) && oldMessage.length > 0) {
 							oldMessage.push(data);
 						}else { 
@@ -171,9 +188,23 @@
 						var qq = $(ele).attr('id');
 						var content = $(ele).find('p').text();
 						insert(qq, content);
-					})
+					});
+/*					var remove = function(qq) {
+						var oldMessage = plus.storage.getItem('host' + hostQQ);
+						var data = {};
+						oldMessage = JSON.parse(oldMessage);
+						for(var i = 0; i < oldMessage.length; i++) {
+							if(oldMessage[i].qq === qq){
+								oldMessage.splice(i,1);
+								break;
+							}
+						}
+						plus.storage.setItem('host' + hostQQ, oldMessage);
+					}*/
 				}
+
 				var generateList = function(qq, content) { 
+					//alert(nick + hostQQ);
 					return  '<li id="' + qq + '" class="mui-table-view-cell">'
 						+ '<div class="mui-slider-cell">'
 							+ '<div class="oa-contact-cell mui-table">'
@@ -182,7 +213,7 @@
 								+ '</div>'
 								+ '<div class="oa-contact-content mui-table-cell">'
 									+ '<div class="mui-clearfix">'
-										+ '<h4 class="oa-contact-name" >' + qq + '</h4>'
+										+ '<h4 class="oa-contact-name" >' + nick[qq] + '</h4>'
 									+ '</div>'
 									+ '<p class="oa-contact-email mui-h6">'
 										+ content
@@ -196,9 +227,10 @@
 					var host = plus.storage.getItem('USER');
 					var message = plus.storage.getItem('host'+ host);
 					message = JSON.parse(message);
+					$('ul').html('');
 					for(var i in message) {
 						var list = generateList(message[i].qq, message[i].content);
-						//保存已存在的会话状态
+						//更新已存在的会话状态
 						exsitDialog.push(message[i].qq);
 						$('ul').append(list);
 					}
@@ -222,58 +254,96 @@
 						}
 					}
 				}
-				
+				//[data]:消息内容, [type]:消息类型'left'接受 'right'发送
+				var parseDynamicMessage = function(data, type) {
+					type = type || 'left';
+					for(var i in data){ 
+							//console.log(exsitDialog);
+							if(data[i].type === '9'){
+								var content; 
+								if( data[i].data.length > 15)
+										content = data[i].data.slice(0, 15) + '...';
+									else
+										content = data[i].data;
+								if($.inArray(data[i].from, exsitDialog) === -1){
+									var list = generateList(data[i].from, content);
+									$('ul').prepend(list);
+									exsitDialog.push(data[i].from);
+								}else {
+									$('ul').find('#'+data[i].from+' p').text(content).parents('li').prependTo('ul');
+								}
+								//console.log('content' + data[i].data);
+								if(type === 'left'){
+									mui.fire(dialogPage, 'updateMessage', {qq:data[i].from, content:data[i].data});
+									//在接受请求的时候更新dialogPage的消息。
+								}
+								insertDialogStorage(data[i].from, data[i].data, type);
+								console.log(dialogQQ+'+'+data[i].from);
+								if(dialogQQ !== data[i].from && dialogPage.isVisible() ===false){
+									updateDot(data[i].from);
+								}
+							}
+					}
+				}
 				var exsitDialog = [];
 				var dialogPage;
 				var dialogQQ = false;
+				var hostQQ, nick;
 				var getMessage = function() {
 					qqapi.query('get_message').success(function(data) {
 						data = data.data;
 						//console.log(data);
-						for(var i in data){ 
-							//console.log(exsitDialog);
-							var content; 
-							if( data[i].data.length > 15)
-									content = data[i].data.slice(0, 15) + '...';
-								else
-									content = data[i].data;
-							if($.inArray(data[i].from, exsitDialog) === -1){
-								var list = generateList(data[i].from, content);
-								$('ul').prepend(list);
-								exsitDialog.push(data[i].from);
-							}else {
-								$('ul').find('#'+data[i].from+' p').text(content).parents('li').prependTo('ul');
-							}
-							//console.log('content' + data[i].data);
-							insertDialogMessage(data[i].from, data[i].data);
-							insertHostMessage();
-							mui.fire(dialogPage, 'updateMessage', {qq:data[i].from, content:data[i].data});
-							console.log(dialogQQ);
-							if(dialogQQ !== data[i].from){
-								if( dialogPage.isVisible() !== true)
-									dialogQQ = false;
-								updateDot(data[i].from);
-							}
-						}
+						parseDynamicMessage(data, 'left');
 					})
 				}
 				mui.plusReady(function() {
 					var subWebview = null;
-					$('ul').on('tap', 'li', function() {
-						dialogPage = plus.webview.getWebviewById("dialog");
+					dialogPage = plus.webview.getWebviewById("dialog");
+					$('ul').on('tap', 'li', function() { 
 						var title = $(this).find('.oa-contact-name').text();
 						var qq = $(this).attr('id');
 						updateDot(qq, true);
-						dialogQQ = qq;
 						dialogPage.show('slide-in-right', 200, function() {
 							mui.fire(dialogPage,'initDialog',{title:title, qq:qq});
 						});
 					});
-					window.addEventListener('startGetMessage', function() {
+					$('ul').on('longtap', 'li', function() {
+						var $this = $(this);
+						var qq = $this.attr('id');
+		  				var btn = ["确定","取消"];
+						mui.confirm('删除消息？','消息',btn,function(e){
+						    if(e.index==0){
+						    	updateDot(qq, true);
+						    	$this.remove();
+						    	updateHostMessage();
+						    }
+						  });
+					});
+					window.addEventListener('chatInit', function() {
+						hostQQ= plus.storage.getItem('USER');
+						nick = plus.storage.getItem(hostQQ + 'nick');
+						nick = JSON.parse(nick);
+						parseHostMessage();
 						setInterval(getMessage,1000);
+					});
+					window.addEventListener('dialogShow', function(data) {
+							dialogQQ = data.detail.qq;
+							//console.log('event '+dialogQQ);
 					})
-					parseHostMessage();
+					window.addEventListener('msgSended', function(data) {
+						data = data.detail;
+						insertDialogStorage(data.qq, data.content, data.type);
+						var formatData = [];
+						formatData[0] = {data:data.content, from:data.qq, type: '9'};
+						parseDynamicMessage(formatData, data.type);
+					});
 				})
+				var clearAllData = function() {
+					var len = plus.storage.getLength();
+					for(var i = 0; i < len; i++){
+						plus.storage.removeItem(plus.storage.key(i));
+					}
+				}
 				//TODO ,头像角标，底栏角标， 聊天界面， 登录webview
 			</script>
 		</div>

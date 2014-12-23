@@ -67,34 +67,53 @@
 		    }
 		  });
 		}
-		var waiting = function() {
-			$('.mask').show();
-			var waiting = plus.nativeUI.showWaiting( "加载中..." );
+		var waiting = function(text) {
+			var waiting = plus.nativeUI.showWaiting(text);
 			return {
 				close: function() {
-					waiting.close();
-					$('.mask').hide();
+						waiting.close();
 					}
 				}
+		}
+		var parseNick = function(data) {
+			var nick = {};
+			for( var i = 0; i < data.length; i++) {
+				nick[data[i].UN] = data[i].NK;
+			}
+			return nick;
 		}
 		document.getElementById('login').addEventListener('click', function() {
 			event.preventDefault();
 			var qq = document.getElementById('qq').value; 
 			var pw = document.getElementById('pw').value;
-			var wait = waiting();
+			var wait = waiting('登录中...');
 			qqapi.query('login', qq, pw).success(function(data) {
 				if(data.success) {
 					var contactPage = plus.webview.getWebviewById('tab-webview-subpage-contact.html');
 					var chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html');
-					mui.fire(contactPage, 'refreshFrient', {data:data});
-					mui.fire(chatPage, 'startGetMessage', {data:data});
 					plus.storage.setItem('USER', qq);
-					showToast('登陆成功');
-					mui.currentWebview.hide();
+					wait.close();
+					qqapi.query('get_informations').success(function(info) {
+						
+						getting = waiting('获取好友列表中，请耐心等待');
+						var nick = parseNick(info.data);
+						//console.log(nick);
+						nick = JSON.stringify(nick);
+						plus.storage.setItem(qq + 'nick', nick);
+						mui.fire(contactPage, 'refreshFrient', {data:data});
+						mui.fire(chatPage, 'chatInit');
+						showToast('登陆成功');
+						getting.close();
+						mui.currentWebview.hide();
+					}).error(function(info){
+						showToast('获取好友列表失败，请重试');
+						getting.close();
+						mui.currentWebview.hide();
+					});
 				}else {
 					showToast('密码错误');
 				}
-				wait.close();
+				
 			}).error(function(data) {
 				showToast('网络连接错误');
 				wait.close();

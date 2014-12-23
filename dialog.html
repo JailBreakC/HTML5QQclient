@@ -33,6 +33,7 @@
 				margin: 0 10px;
 				border-radius: 8px;
 				max-width: 200px;
+				min-height: 42px;
 			}
 			.left-message .text {
 				background-color: white;
@@ -103,6 +104,15 @@
 				z-index: 999;
 				background-color: black;
 				display: none;
+			}
+			input:after {
+			position: absolute;
+			top: 0;
+			right: 0;
+			left: 0;
+			height: 20px;
+			content: '';
+			background-color: #c8c7cc;	
 			}
 		</style>
 	</head>
@@ -180,6 +190,7 @@
 				}
 			}
 			var receiveMessage;
+			var sendMessage;
 			var waiting = function() {
 				$('.mask').show();
 				var waiting = plus.nativeUI.showWaiting( "加载中..." );
@@ -193,19 +204,26 @@
 			var dialogQQ;
 			window.addEventListener('initDialog', function(data) {
 				//var wait = waiting();
+				hostQQ = plus.storage.getItem('USER');
 				data = data.detail;
 				dialogQQ = data.qq;
-				window.message = plus.storage.getItem(data.qq); 
+				window.message = plus.storage.getItem(hostQQ + data.qq); 
 				message = JSON.parse(message);
-				//console.log(data)
-				//console.log(message);
 				$('#t').text(data.title);
 				$('.mui-scroll').html('');
-				receiveMessage = new GenerateMessage(data.qq);
-				for(var i in message.content) {
-					receiveMessage(message.content[i]);
-				}
-				//wait.close();
+				receiveMessage = new GenerateMessage(data.qq, 'left');
+				sendMessage = new GenerateMessage(hostQQ, 'right');
+				mui.fire(chatPage, 'dialogShow', {qq: dialogQQ})
+				console.log(dialogQQ)
+				try{
+					for(var i in message.content) {
+						if(message.type[i] === 'left'){
+							receiveMessage(message.content[i]);
+						}else {
+							sendMessage(message.content[i]);
+						}
+					}
+				}catch(e){console.error(e);}
 			});
 			window.addEventListener('updateMessage', function(data) {
 				console.log(data);
@@ -222,9 +240,9 @@
 					plus.nativeUI.toast(text);
 				}
 			}
+			var hostQQ, chatPage
 			mui.plusReady(function() {
-				var hostQQ = plus.storage.getItem('USER');
-				var sendMessage = new GenerateMessage(hostQQ, 'right');
+				chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html');
 				$('#send').bind('tap', function() {
 					//event.preventDefault();
 					var ipt = $(this).parent().find('input');
@@ -233,12 +251,14 @@
 						if(data.success) {
 							ipt.val('');
 							sendMessage(msg);
+							mui.fire(chatPage, 'msgSended', {qq: dialogQQ, content: msg, type: 'right'});
 						}else {
 							showToast('发送失败');
 						}
 					}).error(function(data) {
 							showToast('网络错误！');
 					})
+					return false;
 				})
 			})
 			
