@@ -161,7 +161,18 @@
 			mui.init({
 				swipeBack:true
 			});
+			function stringEncode(str){
+			    var div=document.createElement('div');
+			    if(div.innerText){
+			        div.innerText=str;
+			    }else{
+			        div.textContent=str;//Support firefox
+			    }
+			    return div.innerHTML;
+		  	}
 			var generateList = function(qq, content, position) {
+				content = stringEncode(content)
+				console.log(qq+content); 
 				position = position || 'left';
 				if(position !== 'right'){
 					return 	'<div class="left-message message">'
@@ -230,7 +241,6 @@
 				}catch(e){console.error(e);}
 			});
 			window.addEventListener('updateMessage', function(data) {
-				console.log(data);
 				data = data.detail;
 				console.log(data);
 				if(data.qq === dialogQQ) {

@@ -202,9 +202,18 @@
 						plus.storage.setItem('host' + hostQQ, oldMessage);
 					}*/
 				}
-
+				function stringEncode(str){
+				    var div=document.createElement('div');
+				    if(div.innerText){
+				        div.innerText=str;
+				    }else{
+				        div.textContent=str;//Support firefox
+				    }
+				    return div.innerHTML;
+			  	}
 				var generateList = function(qq, content) { 
-					//alert(nick + hostQQ);
+					content = stringEncode(content); 
+					
 					return  '<li id="' + qq + '" class="mui-table-view-cell">'
 						+ '<div class="mui-slider-cell">'
 							+ '<div class="oa-contact-cell mui-table">'
@@ -246,6 +255,10 @@
 							$('ul').find('#'+ qq + ' .oa-contact-content').append('<span class="mui-badge">1</span>')
 						}
 						mui.fire(mainPage, 'updateDot', {type: 'chat', count: 1});
+						plus.device.vibrate('80');
+						setTimeout(function() {
+							plus.device.vibrate('50');
+						},200);
 					}else {
 						if(dot.length > 0) {
 							var count = parseInt(dot.text(), 10);
@@ -265,6 +278,8 @@
 										content = data[i].data.slice(0, 15) + '...';
 									else
 										content = data[i].data;
+								//过滤XSS
+								//content = stringEncode(content);
 								if($.inArray(data[i].from, exsitDialog) === -1){
 									var list = generateList(data[i].from, content);
 									$('ul').prepend(list);
@@ -279,7 +294,7 @@
 								}
 								insertDialogStorage(data[i].from, data[i].data, type);
 								//console.log(dialogQQ+'+'+data[i].from);
-								if(dialogQQ !== data[i].from && dialogPage.isVisible() ===false){
+								if(dialogQQ !== data[i].from || dialogPage.isVisible() ===false){
 									updateDot(data[i].from);
 								}
 							}

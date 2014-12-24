@@ -93,11 +93,11 @@
 					var chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html');
 					plus.storage.setItem('USER', qq);
 					wait.close();
+					getting = waiting('获取好友列表中，请耐心等待');
 					qqapi.query('get_informations').success(function(info) {
 						
-						getting = waiting('获取好友列表中，请耐心等待');
 						var nick = parseNick(info.data);
-						//console.log(nick);
+						console.log(nick);
 						nick = JSON.stringify(nick);
 						plus.storage.setItem(qq + 'nick', nick);
 						mui.fire(contactPage, 'refreshFrient', {data:data});
@@ -111,6 +111,7 @@
 						mui.currentWebview.hide();
 					});
 				}else {
+					wait.close();
 					showToast('密码错误');
 				}
 				

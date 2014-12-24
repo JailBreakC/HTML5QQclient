@@ -4,6 +4,7 @@ var host = window.location.host
 if(host.length > 5)
 	host = 'http://127.0.0.1:5000';
 else
+	//host ='http://hi-hi.cn:5033'
 	host = 'http://192.168.1.111:5000';
 Qqapi = function(host) {
 	return function(cmd, param) {

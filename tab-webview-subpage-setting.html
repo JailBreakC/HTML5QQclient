@@ -66,6 +66,7 @@
 		<script>
 		document.getElementById('exist').addEventListener('tap', function () {
 			var chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html')
+			var mainPage = plus.webview.getWebviewById('HBuilder')
 			chatPage.loadURL('tab-webview-subpage-chat.html')
 			var login = plus.webview.getWebviewById("login");
 			login.show();
