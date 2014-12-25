@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>
+</head>
+<body>
+	<nav>
+		<h1>请输入远程API地址</h1>
+		<input id="addr" value="http://" type="text">
+		<button id="submit">确定</button>
+	</nav>
+	<script type="text/javascript">
+		mui.plusReady(function() {
+			var addr = plus.storage.getItem('remoteAddr');
+			if(addr) {
+				document.getElementById('addr').value = addr;
+			}
+		})
+		document.getElementById('submit').addEventListener('click', function() {
+			var addr = document.getElementById('addr').value;
+			var a = plus.storage.setItem('remoteAddr', addr);
+			alert('成功,请重启客户端');
+		})
+	</script>
+</body>
+</html>

@@ -257,25 +257,33 @@
 			var hostQQ, chatPage
 			mui.plusReady(function() {
 				chatPage = plus.webview.getWebviewById('tab-webview-subpage-chat.html');
+				var sendding = 0;
 				$('#send').bind('tap', function() {
 					//event.preventDefault();
-					var ipt = $(this).parent().find('input');
-					var msg = ipt.val();
-					ipt.focus();
-					if(msg){
-						qqapi.query('send_message', dialogQQ , msg).success(function(data) {
-							if(data.success) { 
-								ipt.val('');
-								sendMessage(msg);
-								mui.fire(chatPage, 'msgSended', {qq: dialogQQ, content: msg, type: 'right'});
-							}else {
-								showToast('发送失败');
-							}
-						}).error(function(data) {
-								showToast('网络错误！');
-						})
-					}else {
-						showToast('请输入消息');
+					if(!sendding){
+						sendding = 1;
+						var ipt = $(this).parent().find('input');
+						var msg = ipt.val();
+						ipt.focus();
+						if(msg){
+							qqapi.query('send_message', dialogQQ , msg).success(function(data) {
+								sendding = 0;
+								if(data.success) { 
+									ipt.val('');
+									sendMessage(msg);
+									mui.fire(chatPage, 'msgSended', {qq: dialogQQ, content: msg, type: 'right'});
+								}else {
+									showToast('发送失败');
+								}
+							}).error(function(data) {
+									sendding = 0;
+									showToast('网络错误！');
+							})
+						}else {
+							showToast('请输入消息');
+						}
+					} else {
+						showToast('消息发送中(云端模式速度较慢)...');
 					}
 				})
 				$('#send').focus(function() {

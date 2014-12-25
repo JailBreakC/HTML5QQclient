@@ -33,6 +33,11 @@
     	button {
     		margin-top: 20px;
     	}
+    	#setting {
+    		position: fixed;
+    		bottom: 20px;
+    		right: 20px;
+    	}
     </style>
 </head>
 <body>
@@ -49,7 +54,7 @@
 			</div>
 			<button id="login" class="mui-btn mui-btn-primary mui-btn-block">登录</button>
 		</form>
-
+		<div id="setting" class="mui-icon mui-icon-gear"></div>
 	</div>
 	<script type="text/javascript">
 		function showToast(text){
@@ -82,6 +87,12 @@
 			}
 			return nick;
 		}
+        document.getElementById('setting').addEventListener('tap', function() {
+                mui.openWindow({
+				    url:'setting.html',
+				    id:'setting',
+				})
+        }); 
 		document.getElementById('login').addEventListener('click', function() {
 			event.preventDefault();
 			var qq = document.getElementById('qq').value; 
